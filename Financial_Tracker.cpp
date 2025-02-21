@@ -1,106 +1,139 @@
 #include <iostream>
-#include <windows.h>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
-#include <conio.h> 
 #include <fstream>
 #include <string>
 
 using namespace std;
 
-struct Budget {
-
-};
-
-struct expenditure {
-    double spend;
-    string reason;
-    int date;
-};
-
-struct income {
-    double earn;
-    string reason;
+struct Transaction {
+    string description;
+    double amount;
     int date;
 };
 
 class Budget {
-    public:
-        void addSpend();
-        void removeSpend();
-        void viewBudget();
-        void invest(); //this is for further down the line, may need to be another class for the functions inside of this.
+public:
+    void addSpend();
+    void removeSpend();
+    void viewBudget();
+    void invest(); 
 };
 
-class Finance{
+class Finance {
     private:
-        vector<int> pin;
-        vector<expenditure> reciept;
-        vector<income> incomeList;
+        vector<Transaction> transactions;
+        vector<Transaction> incomes;
+        vector<Transaction> outgoings;
         double balance;
+
     public:
-        double loadBalance(vector<int>& pin, double& balance){ //returns current budget
-            return balance;
-            }
-        
-        void adjustBalance(vector<expenditure> receipt, double balance){ //allows user to adjust balance, every time balance is adjusted, user must give reason for adjustment
-            expenditure newSpend;
-            income newIncome;
-            double currentSpend;
+        double getBalance() const { 
+            return balance; 
+        }
+
+        void adjustBalance(vector<Transaction>& transactions, double& balance) {
+            Transaction newTransaction;
             int choice;
             cout << "Would you like to adjust for an expenditure (1) or income (2):" << endl;
             cin >> choice;
-            switch (choice){
-                case 1:
-                    cout << "Please enter the value of the expenditure:" << endl;
-                    cin >> newSpend.spend;
-                    cout << "Please enter the date of the expenditure in the format DDMMYYYY:" << endl;
-                    cin >> newSpend.date;
-                    cout << "Please enter the reason for the expenditure:" << endl;
-                    getline(cin, newSpend.reason);
-                    balance -= newSpend.spend;
-                    receipt.push_back(newSpend);
-                    break;
-                case 2:
-                    cout << "Please enter the value of income:" << endl;
-                    cin >> newIncome.earn;
-                    cout << "Please enter the date of the income in the format DDMMYYYY:" << endl;
-                    cin >> newIncome.date;
-                    cout << "Please enter the reason for income:" << endl;
-                    getline(cin, newIncome.reason);
-                    balance += newIncome.earn;
-                    incomeList.push_back(newIncome);
-                    break;
+            cin.ignore(); // Fixes getline() issue
+
+            cout << "Enter the amount:" << endl;
+            cin >> newTransaction.amount;
+            cin.ignore();
+
+            cout << "Enter the date (DDMMYYYY):" << endl;
+            cin >> newTransaction.date;
+            cin.ignore();
+
+            cout << "Enter the reason:" << endl;
+            getline(cin, newTransaction.description);
+
+            if (choice == 1) {
+                balance -= newTransaction.amount;
+            } else {
+                balance += newTransaction.amount;
             }
-            
+
+            transactions.push_back(newTransaction);
         }
 
-        void budgetPlan(double& balance){
+        void budgetPlan(double& balance, vector<Transaction>& incomes, vector<Transaction>& outgoings) {
             int choice;
             cout << "1) View Current Plan: \n2) Create New Plan:" << endl;
             cin >> choice;
-            switch (choice){
-                case 1:
-                    cout << "current balance:" << balance << endl;
-                    break;
-                case 2:
-                    cout << "current balance:" << balance << endl;
 
-                    break;
+            if (choice == 1) {
+                if (incomes.empty() && outgoings.empty()) {
+                    cout << "There is currently no budget plan." << endl;
+                } else {
+                    cout << "Current balance: " << balance << endl;
+                    cout << "Current Income:" << endl;
+                    for (const auto& ins : incomes) {
+                        cout << "Value: " << ins.amount << " Reason: " << ins.description << endl;
+                    }
+                    cout << "Current Expenditure:" << endl;
+                    for (const auto& outs : outgoings) {
+                        cout << "Value: " << outs.amount << " Reason: " << outs.description << endl;
+                    }
+                }
+            } else {
+                incomes.clear();
+                outgoings.clear();
+                double copyBalance = balance;
+                Transaction newTransaction;
+                
+                cout << "Current balance: " << balance << endl;
+                cout << "Would you like to add an expenditure (1) or income (2)?" << endl;
+                cin >> choice;
+                cin.ignore();
+
+                cout << "Enter the amount:" << endl;
+                cin >> newTransaction.amount;
+                cin.ignore();
+
+                cout << "Enter the reason:" << endl;
+                getline(cin, newTransaction.description);
+
+                if (choice == 1) {
+                    copyBalance -= newTransaction.amount;
+                    outgoings.push_back(newTransaction);
+                } else {
+                    copyBalance += newTransaction.amount;
+                    incomes.push_back(newTransaction);
+                }
+
+                cout << "Updated balance: " << copyBalance << endl;
             }
         }
 
-        void print(){
-            int timeChoice;
-            int choice;
-            cout << "Do you want to print your expenditures(1) or income statement?(2):" << endl;
-            cin >> choice;
-            cout << "Please select a time period (no input will be read as wanting to see everything):" << endl;
-            cin >> timeChoice;
+        void print(const vector<Transaction>& transactions, const string& type) {
+            cout << type << " Statement:" << endl;
+            for (const auto& obj : transactions) {
+                cout << "Value: " << obj.amount << " Description: " << obj.description << endl;
+            }
         }
-
-        
-    
-            
 };
+
+int main(){
+    Finance financeObj;
+    int choice;
+    cout << "Jamie's Finance Tracker" << endl;
+    cout << "1) See Balance:\n\n" << "2) Adjust Balance:\n\n" << "3) View/Create Budget:" << "4) Print Financial Statement:\n\n" << endl;
+    cin >> choice;
+    switch (choice) {
+        case 1:
+            cout << "Balance: " << financeObj.getBalance() << endl;
+            break;
+        case 2:
+            financeObj.adjustBalance(financeObj.transactions,financeObj.balance);
+            break;
+        case 3:
+            financeObj.budgetPlan(financeObj.balance,financeObj.incomes,financeObj.outgoings);
+            break;
+        case 4:
+            financeObj.print(financeObj.transactions,"Financial Statement");
+            break;
+    }
+return 0;
+}
