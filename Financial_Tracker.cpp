@@ -27,6 +27,10 @@ class Finance {
         double balance;
 
     public:
+        vector<Transaction>& getTransactions() { return transactions; }
+        vector<Transaction>& getIncomes() { return incomes; }
+        vector<Transaction>& getOutgoings() { return outgoings; }
+        double& getBalanceRef() { return balance; }
         double getBalance() const { 
             return balance; 
         }
@@ -126,13 +130,13 @@ int main(){
             cout << "Balance: " << financeObj.getBalance() << endl;
             break;
         case 2:
-            financeObj.adjustBalance(financeObj.transactions,financeObj.balance);
+            financeObj.adjustBalance(financeObj.getTransactions(),financeObj.getBalanceRef());
             break;
         case 3:
-            financeObj.budgetPlan(financeObj.balance,financeObj.incomes,financeObj.outgoings);
+            financeObj.budgetPlan(financeObj.getBalanceRef(),financeObj.getIncomes(),financeObj.getOutgoings());
             break;
         case 4:
-            financeObj.print(financeObj.transactions,"Financial Statement");
+            financeObj.print(financeObj.getTransactions(),"Financial Statement");
             break;
     }
 return 0;
