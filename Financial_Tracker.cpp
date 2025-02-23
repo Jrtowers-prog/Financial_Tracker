@@ -1,4 +1,3 @@
-//sort out bugging, actions need to go back to main menu
 //save (file I/O)
 //more features from there
 
@@ -48,114 +47,122 @@ class Finance {
                 int choice;
                 cout << "Would you like to adjust for an expenditure (1) or income (2): ";
                 cin >> choice;
-    
+        
                 while (!(choice == 1 || choice == 2)) {
                     cout << "Please enter a valid choice (1 or 2): ";
                     cin >> choice;
                 }
-    
-                cout << "Enter the amount (- for expenditure): ";
+        
+                cout << "Enter the amount: ";
                 cin >> newTransaction.amount;
-    
-                if (newTransaction.amount > 0) {
-                    newTransaction.action = "Income:";
-                } else {
-                    newTransaction.action = "Expenditure:";
-                }
-    
+        
                 cin.ignore();
                 cout << "Enter the date (DDMMYYYY): ";
                 cin >> newTransaction.date;
                 cin.ignore();
-    
+        
                 cout << "Enter the reason: ";
                 getline(cin, newTransaction.description);
-    
-                if (choice == 1) {
-                    balance += newTransaction.amount;
-                } else {
-                    balance += newTransaction.amount;
+        
+                if (choice == 1) {  // Expenditure
+                    newTransaction.amount = -abs(newTransaction.amount); // Ensure it's negative
+                    newTransaction.action = "Expenditure";
+                } else {  // Income
+                    newTransaction.amount = abs(newTransaction.amount);  // Ensure it's positive
+                    newTransaction.action = "Income";
                 }
-    
+        
+                balance += newTransaction.amount; // Now, correctly adds/subtracts based on transaction type
                 transactions.push_back(newTransaction);
-    
+        
+                cout << "Transaction added! Current balance: " << balance << endl;
+        
                 cout << "Would you like to add another transaction? (y/n): ";
                 cin >> another;
                 cin.ignore();
-    
+        
             } while (another == 'y' || another == 'Y');
         }
 
         void budgetPlan(double& balance, vector<Transaction>& incomes, vector<Transaction>& outgoings) {
             int choice;
-            double incomeTotal = 0;
-            double outTotal = 0;
-            cout << "1) View Current Plan: \n2) Create New Plan:" << endl;
+            double incomeTotal = 0, outTotal = 0;
+            
+            cout << "1) View Current Plan\n2) Create New Plan" << endl;
             cin >> choice;
-
+        
             if (choice == 1) {
                 if (incomes.empty() && outgoings.empty()) {
                     cout << "There is currently no budget plan." << endl;
-                    cout << "\nPress Enter to return to the menu...";
-                    cin.ignore();
-                    cin.get();  // Pause until the user presses Enter
                 } else {
+                    cout << "Current Income: \n";
                     for (const auto& ins : incomes) {
                         cout << "Value: " << ins.amount << " Reason: " << ins.description << endl;
                         incomeTotal += ins.amount;
                     }
-                    cout << "Total Income: " << incomeTotal << "\n\n";
-                    cout << "Current Expenditure:" << endl;
+                    cout << "\nTotal Income: " << incomeTotal << "\n\n";
+                    
+                    cout << "Current Expenditure: \n";
                     for (const auto& outs : outgoings) {
                         cout << "Value: " << outs.amount << " Reason: " << outs.description << endl;
                         outTotal += outs.amount;
                     }
-                    cout << "Total Expenditure: " << outTotal << "\n\n";
-                    cout << "\nPress Enter to return to the menu...";
-                    cin.get();  // Pause until the user presses Enter
-                    cin.ignore();
+                    cout << "\nTotal Expenditure: " << outTotal << "\n\n";
                 }
-            } else {
+                cout << "\nPress Enter to return to the menu...";
+                cin.ignore();
+                cin.get();
+            } 
+            else if (choice == 2) {
                 char another;
-                do {
-                    incomes.clear();
+                incomes.clear();
                 outgoings.clear();
-                double copyBalance = balance;
-                Transaction newTransaction;
                 
-                cout << "Current balance: " << balance << endl;
-                cout << "Would you like to add an expenditure (1) or income (2)?" << endl;
-                cin >> choice;
-                cin.ignore();
-
-                cout << "Enter the amount:" << endl;
-                cin >> newTransaction.amount;
-                cin.ignore();
-
-                cout << "Enter the reason:" << endl;
-                getline(cin, newTransaction.description);
-
-                if (choice == 1) {
-                    copyBalance -= newTransaction.amount;
-                    outgoings.push_back(newTransaction);
-                } else {
-                    copyBalance += newTransaction.amount;
-                    incomes.push_back(newTransaction);
-                }
-
-                cout << "Updated balance: " << copyBalance << endl;
-                cout << "Would you like to add another transaction? (y/n): ";
-                cin >> another;
-                cin.ignore();
-    
+                double copyBalance = balance; // Create a copy to simulate balance changes
+                
+                do {
+                    Transaction newTransaction;
+                    
+                    cout << "Simulated balance: " << copyBalance << endl;
+                    cout << "Would you like to add an expenditure (1) or income (2)? ";
+                    cin >> choice;
+                    cin.ignore();
+        
+                    cout << "Enter the amount: ";
+                    cin >> newTransaction.amount;
+                    cin.ignore();
+        
+                    cout << "Enter the reason: ";
+                    getline(cin, newTransaction.description);
+        
+                    if (choice == 1) {  // Expenditure
+                        newTransaction.amount = -abs(newTransaction.amount); // Ensure negative
+                        outgoings.push_back(newTransaction);
+                    } else {  // Income
+                        newTransaction.amount = abs(newTransaction.amount);  // Ensure positive
+                        incomes.push_back(newTransaction);
+                    }
+        
+                    copyBalance += newTransaction.amount;  // Adjust copyBalance instead of real balance
+        
+                    cout << "Projected balance after this change: " << copyBalance << endl;
+                    cout << "Would you like to add another transaction? (y/n): ";
+                    cin >> another;
+                    cin.ignore();
+        
                 } while (another == 'y' || another == 'Y');
+        
+                cout << "Budget plan saved! This does not affect your real balance.\n";
+            }
+            else {
+                cout << "Invalid option, try again.\n";
             }
         }
 
         void print(const vector<Transaction>& transactions, const string& type) {
             cout << "\n\n" << type << " Statement:" << endl;
             for (const auto& obj : transactions) {
-                cout << obj.action << " " << "Value: " << obj.amount << " Description: " << obj.description << endl;
+                cout << obj.action << " " << "Value: " << obj.amount << " || Description: " << obj.description << endl;
             }
         }
 };
@@ -164,7 +171,7 @@ int main() {
     Finance financeObj;
     int choice;
     while (true) { // Infinite loop ensures the menu always comes back
-        cout << "Jamie's Finance Tracker" << endl;
+        cout << "\n\nJamie's Finance Tracker \n\n" << endl;
         cout << "1) See Balance:\n\n"
              << "2) Adjust Balance:\n\n"
              << "3) View/Create Budget: \n\n"
