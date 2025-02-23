@@ -1,7 +1,6 @@
 //save (file I/O)
 //more features from there
 
-
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -97,14 +96,14 @@ class Finance {
                 } else {
                     cout << "Current Income: \n";
                     for (const auto& ins : incomes) {
-                        cout << "Value: " << ins.amount << " Reason: " << ins.description << endl;
+                        cout << "Value: " << ins.amount << "  |  Reason: " << ins.description << endl;
                         incomeTotal += ins.amount;
                     }
                     cout << "\nTotal Income: " << incomeTotal << "\n\n";
                     
                     cout << "Current Expenditure: \n";
                     for (const auto& outs : outgoings) {
-                        cout << "Value: " << outs.amount << " Reason: " << outs.description << endl;
+                        cout << "Value: " << outs.amount << "  |  Reason: " << outs.description << endl;
                         outTotal += outs.amount;
                     }
                     cout << "\nTotal Expenditure: " << outTotal << "\n\n";
@@ -165,6 +164,24 @@ class Finance {
                 cout << obj.action << " " << "Value: " << obj.amount << " || Description: " << obj.description << endl;
             }
         }
+
+        void ExportBudgetToCSV(const vector<Transaction>& incomes, const vector<Transaction>& outgoings, const string filename){
+            ofstream file(filename);
+            
+            if (!file){
+                cout << "Error opening file!" << endl;
+                return;
+            }
+            file << "Amount | Description\n";
+            for (const auto& t : incomes) {
+                file << t.amount << "  |  " << t.description << "\n";
+            }
+            for (const auto& x : outgoings) {
+                file << x.amount << "  |  " << x.description << "\n";
+            }
+            file.close();
+            cout << "Budget Exported to " << filename << endl;
+        }
 };
 
 int main() {
@@ -176,7 +193,8 @@ int main() {
              << "2) Adjust Balance:\n\n"
              << "3) View/Create Budget: \n\n"
              << "4) Print Financial Statement:\n\n"
-             << "5) Exit: \n\n" << endl;
+             << "5) Save to CSV:\n\n"
+             << "6) Exit: \n\n" << endl;
         cin >> choice;
         cin.ignore();  // Ensure buffer is clear before taking further input
 
@@ -197,8 +215,12 @@ int main() {
                 cout << "\nPress Enter to return to the menu...";
                 cin.get();  // Pause until the user presses Enter
                 break;
-                break;
             case 5:
+                financeObj.ExportBudgetToCSV(financeObj.getIncomes(), financeObj.getOutgoings(),"test.csv");
+                cout << "\nPress Enter to return to the menu...";
+                cin.get();  // Pause until the user presses Enter
+                break;
+            case 6:
                 return 0;
             default:
                 cout << "Invalid choice. Try again.\n";
