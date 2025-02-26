@@ -1,4 +1,5 @@
 #include "include/json.hpp"
+#include <curl/curl.h>
 #include <filesystem>
 #include <iostream>
 #include <vector>
