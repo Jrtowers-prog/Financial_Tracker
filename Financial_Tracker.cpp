@@ -1,3 +1,6 @@
+//cURL library not recognised, also fix syntax errors, I think in start of main func (with IO)
+
+
 #include "include/json.hpp"
 #include <curl/curl.h>
 #include <filesystem>
@@ -6,8 +9,56 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
+#include <sstream>  
 
 using namespace std;
+using json = nlohmann::json;  // Define json type for simplicity
+
+class API {
+public:
+    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+        ((string*)userp)->append((char*)contents, size * nmemb);
+        return size * nmemb;
+    }
+
+    string fetchStockData(const string& symbol) {
+        CURL* curl;
+        CURLcode res;
+        string readBuffer;
+
+        curl = curl_easy_init();
+        if (curl) {
+            string apiKey = "ba02771a3d8d4bfa83fa7821045e000a"; 
+            string url = "https://api.twelvedata.com/time_series?symbol=" + symbol + "&interval=1day&apikey=" + apiKey;
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());  
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);  
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);  
+
+            res = curl_easy_perform(curl);  
+            curl_easy_cleanup(curl);  
+        }
+        return readBuffer;
+    }
+
+    void parseStockData(const std::string& jsonData) {
+        try {
+            json root = json::parse(jsonData);  // Parse JSON string
+
+            if (root.contains("values") && root["values"].is_array() && !root["values"].empty()) {
+                string latestDate = root["values"][0]["datetime"];
+                string latestPrice = root["values"][0]["close"];
+
+                cout << "Latest Stock Price (" << latestDate << "): $" << latestPrice << endl;
+            } else {
+                cout << "Error: No stock data available!" << endl;
+            }
+        } catch (json::parse_error& e) {
+            cout << "JSON Parse Error: " << e.what() << endl;
+        }
+    }
+};
+
 
 struct Transaction {
     string description;
@@ -233,12 +284,15 @@ class Finance {
             cout << "Generating graph for " << filename << "..." << endl;
             system(command.c_str());  // Runs the Python script with the file name
         }
+
 };
 
 int main() {
     Finance financeObj;
+    API api;  // Create an instance of API
     int choice;
-    while (true) { // Infinite loop ensures the menu always comes back
+
+    while (true) { 
         cout << "\n\nJamie's Finance Tracker \n\n" << endl;
         cout << "1) See Balance:\n\n"
              << "2) Adjust Balance:\n\n"
@@ -246,15 +300,16 @@ int main() {
              << "4) Print Financial Statement:\n\n"
              << "5) Save to CSV:\n\n"
              << "6) Generate Graph: \n\n"
-             << "7) Exit: \n\n" << endl;
+             << "7) Check Stock Price: \n\n"
+             << "8) Exit: \n\n" << endl;
         cin >> choice;
-        cin.ignore();  // Ensure buffer is clear before taking further input
+        cin.ignore();  
 
         switch (choice) {
             case 1:
                 cout << "Balance: " << financeObj.getBalance() << endl;
                 cout << "\nPress Enter to return to the menu...";
-                cin.get();  // Pause until the user presses Enter
+                cin.get();
                 break;
             case 2:
                 financeObj.adjustBalance(financeObj.getTransactions(), financeObj.getBalanceRef());
@@ -265,24 +320,41 @@ int main() {
             case 4:
                 financeObj.print(financeObj.getTransactions(), "Financial");
                 cout << "\nPress Enter to return to the menu...";
-                cin.get();  // Pause until the user presses Enter
+                cin.get();
                 break;
             case 5:
                 financeObj.ExportBudgetToCSV(financeObj.getIncomes(), financeObj.getOutgoings());
                 cout << "\nPress Enter to return to the menu...";
-                cin.get();  // Pause until the user presses Enter
+                cin.get();
                 break;
             case 6:
                 financeObj.generateBarGraph();
                 cout << "\nPress Enter to return to the menu...";
-                cin.get();  // Pause until the user presses Enter
+                cin.get();
                 break;
-            case 7:
+            case 7: {  // Fetch Stock Price
+                string stockSymbol;
+                cout << "Enter the stock symbol (e.g., AAPL, TSLA): ";
+                cin >> stockSymbol;
+
+                string jsonData = api.fetchStockData(stockSymbol);
+                if (!jsonData.empty()) {
+                    api.parseStockData(jsonData);
+                } else {
+                    cout << "Failed to retrieve stock data. Please try again." << endl;
+                }
+
+                cout << "\nPress Enter to return to the menu...";
+                cin.ignore();
+                cin.get();
+                break;
+            }
+            case 8:
                 return 0;
             default:
                 cout << "Invalid choice. Try again.\n";
                 cout << "\nPress Enter to return to the menu...";
-                cin.get();  // Pause until the user presses Enter
+                cin.get();
                 break;
         }
     }
