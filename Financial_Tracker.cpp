@@ -1,6 +1,5 @@
 //cURL library not recognised, also fix syntax errors, I think in start of main func (with IO)
 
-
 #include "include/json.hpp"
 #include <curl/curl.h>
 #include <filesystem>
